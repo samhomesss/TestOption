@@ -1,32 +1,38 @@
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // 중요: TextMeshPro 네임스페이스
+using TMPro;
 
 public class ScreenDropDown : MonoBehaviour
 {
-    Resolution[] resolutions;
     TMP_Dropdown _resolutionDropDown;
+    List<Resolution> uniqueResolutions = new List<Resolution>();
 
     void Start()
     {
         _resolutionDropDown = GetComponent<TMP_Dropdown>();
-
-        resolutions = Screen.resolutions;
         _resolutionDropDown.ClearOptions();
 
+        Resolution[] resolutions = Screen.resolutions;
+        HashSet<string> seen = new HashSet<string>();
         List<string> options = new List<string>();
-
         int currentResolutionIndex = 0;
 
         for (int i = 0; i < resolutions.Length; i++)
         {
-            string option = resolutions[i].width + " x " + resolutions[i].height;
-            options.Add(option);
+            string resString = resolutions[i].width + "X" + resolutions[i].height;
 
-            if (resolutions[i].width == Screen.currentResolution.width &&
-                resolutions[i].height == Screen.currentResolution.height)
+            // 중복 제거
+            if (!seen.Contains(resString))
             {
-                currentResolutionIndex = i; 
+                seen.Add(resString);
+                options.Add(resString);
+                uniqueResolutions.Add(resolutions[i]);
+
+                if (resolutions[i].width == Screen.currentResolution.width &&
+                    resolutions[i].height == Screen.currentResolution.height)
+                {
+                    currentResolutionIndex = uniqueResolutions.Count - 1;
+                }
             }
         }
 
@@ -37,9 +43,10 @@ public class ScreenDropDown : MonoBehaviour
         _resolutionDropDown.onValueChanged.AddListener(SetResolution);
     }
 
-    public void SetResolution(int resolutionIndex)
+    public void SetResolution(int index)
     {
-        Resolution resolution = resolutions[resolutionIndex];
-        Screen.SetResolution(resolution.width , resolution.height , Screen.fullScreen);
+        Resolution res = uniqueResolutions[index];
+        Screen.SetResolution(res.width, res.height, Screen.fullScreen);
+        Debug.Log($"Resolution set to: {res.width} x {res.height}");
     }
 }
