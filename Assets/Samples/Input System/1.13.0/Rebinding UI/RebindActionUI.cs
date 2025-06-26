@@ -230,6 +230,34 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
             UpdateBindingDisplay();
         }
+        #region 참고 하면서 볼 부분 + 내가 작성 
+        /// <summary>
+        /// 시작할때 내가 설정한 Binding을 설정 하는 거 
+        /// </summary>
+        private void Start()
+        {
+            LoadActionBinding();
+        }
+
+        /// <summary>
+        /// 게임이 다시 켜질때 또한 바인드 해놨던 값이 제대로 적용 되어야 하기에 하는 작업 
+        /// 참조 하는 ActionReference에 action에 actionMap을 AsJson으로 저장하려고 만든 함수 
+        /// </summary>
+        private void SaveActionBinding()
+        {
+            var currentBindings = actionReference.action.actionMap.SaveBindingOverridesAsJson();
+            //PlayerPrefs.SetString("Bindings", currentBindings); // Binding으로 사용할 경우 여러가지가 함계 바인딜 될 수 있기에 키를 고유값으로 바꿈 
+            PlayerPrefs.SetString(m_Action.action.name + bindingId, currentBindings);
+        }
+
+        private void LoadActionBinding()
+        {
+            var savedBindings = PlayerPrefs.GetString(m_Action.action.name + bindingId);
+            if (!string.IsNullOrEmpty(savedBindings))
+            {
+                actionReference.action.actionMap.LoadBindingOverridesFromJson(savedBindings);
+            }
+        }
 
         /// <summary>
         /// Initiate an interactive rebind that lets the player actuate a control to choose a new binding
@@ -237,6 +265,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// </summary>
         public void StartInteractiveRebind()
         {
+           // m_Action.action.Disable(); // 비활성화 하는 부분 
+
             if (!ResolveActionAndBinding(out var action, out var bindingIndex))
                 return;
 
@@ -255,13 +285,17 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void PerformInteractiveRebind(InputAction action, int bindingIndex, bool allCompositeParts = false)
         {
+            action.Disable();
             m_RebindOperation?.Cancel(); // Will null out m_RebindOperation.
 
             void CleanUp()
             {
                 m_RebindOperation?.Dispose();
                 m_RebindOperation = null;
+               // m_Action.action.Enable();
+
                 action.Enable();
+                SaveActionBinding(); // 바인딩 설정 했을때 해당 바인드 값 저장 해주는 거 
             }
 
             //Fixes the "InvalidOperationException: Cannot rebind action x while it is enabled" error
@@ -322,6 +356,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
             m_RebindOperation.Start();
         }
+
+        #endregion
 
         protected void OnEnable()
         {
