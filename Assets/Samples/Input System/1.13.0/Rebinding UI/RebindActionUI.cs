@@ -301,6 +301,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             //Fixes the "InvalidOperationException: Cannot rebind action x while it is enabled" error
             action.Disable();
 
+            var previousOverridePath = action.bindings[bindingIndex].overridePath; // 동일값 할당 안되도록 설정 
+
             // Configure the rebind.
             m_RebindOperation = action.PerformInteractiveRebinding(bindingIndex)
                 .OnCancel(
@@ -309,6 +311,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                         m_RebindStopEvent?.Invoke(this, operation);
                         if (m_RebindOverlay != null)
                             m_RebindOverlay.SetActive(false);
+
+                        if (IsBindingAlreadyUsed(action, bindingIndex)) // 동일값 할당 안되도록 설정
+                        {
+                            if (string.IsNullOrEmpty(previousOverridePath))
+                                action.RemoveBindingOverride(bindingIndex);
+                            else
+                                action.ApplyBindingOverride(bindingIndex, previousOverridePath);
+                            Debug.LogWarning($"Control '{operation.selectedControl}' is already bound in this action map.", this);
+                        }
                         UpdateBindingDisplay();
                         CleanUp();
                     })
@@ -355,6 +366,37 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_RebindStartEvent?.Invoke(this, m_RebindOperation);
 
             m_RebindOperation.Start();
+        }
+
+
+        /// <summary>
+        /// 바인드 동일값 설정 안되도록
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="bindingIndex"></param>
+        /// <returns></returns>
+        private bool IsBindingAlreadyUsed(InputAction action, int bindingIndex)
+        {
+            var newPath = action.bindings[bindingIndex].effectivePath;
+            if (string.IsNullOrEmpty(newPath))
+                return false;
+
+            var map = action.actionMap;
+            if (map == null)
+                return false;
+
+            foreach (var act in map.actions)
+            {
+                var bindings = act.bindings;
+                for (int i = 0; i < bindings.Count; i++)
+                {
+                    if (act == action && i == bindingIndex)
+                        continue;
+                    if (bindings[i].effectivePath == newPath)
+                        return true;
+                }
+            }
+            return false;
         }
 
         #endregion
@@ -407,6 +449,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     component.UpdateBindingDisplay();
             }
         }
+
+
 
         [Tooltip("Reference to action that is to be rebound from the UI.")]
         [SerializeField]
