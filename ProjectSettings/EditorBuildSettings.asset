@@ -9,5 +9,7 @@ EditorBuildSettings:
     path: Assets/Samples/Input System/1.13.0/Rebinding UI/RebindingUISampleScene.unity
     guid: f6995f4eab80237489ce6962c13d8372
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 1c50094bd52655d4e8f9d0b57249eefa, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    com.unity.localization.settings: {fileID: 11400000, guid: 0564482ab22d00d42b4d7b0a36caa0d0, type: 2}
   m_UseUCBPForAssetBundles: 0
